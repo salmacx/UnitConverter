@@ -16,6 +16,7 @@ type ApiResponse = {
   result?: number;
   tool?: string;
   error?: string;
+  detail?: string | { msg?: string }[];
 };
 
 const BACKEND_URL = "http://localhost:8000";
@@ -68,17 +69,20 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          value: valueNumber,
-          from_unit: selected.from,
-          to_unit: selected.to,
+          input: `convert ${valueNumber} ${selected.from} to ${selected.to}`,
         }),
       });
 
       const json = (await res.json()) as ApiResponse;
 
       if (!res.ok && !json.error) {
-        json.error = `Request failed (${res.status})`;
-      }
+if (typeof json.detail === "string") {
+          json.error = json.detail;
+        } else if (Array.isArray(json.detail) && json.detail[0]?.msg) {
+          json.error = json.detail[0].msg;
+        } else {
+          json.error = `Request failed (${res.status})`;
+        }      }
 
       setData(json);
     } catch {
