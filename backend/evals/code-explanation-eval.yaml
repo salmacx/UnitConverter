@@ -1,38 +1,49 @@
 # yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
 
-description: "Code explanation eval"
+description: "Unit conversion JSON extraction eval"
 
 prompts:
-  - "Explain what this code does in one sentence: {{code}}"
-  - "Explain this code to a beginner in simple terms: {{code}}"
+-  |
+  Extract structured conversion data from user input.
+  Return valid JSON only with keys: value, from_unit, to_unit.
+  User input: {{input}}
 
 providers:
-  - "ollama:chat:tinyllama"
+  - "ollama:chat:llama3.1:latest"
+  - "ollama:chat:llama3.2:latest"
   - "ollama:chat:phi3:mini"
   - "ollama:chat:qwen2:0.5b"
-
 tests:
   - vars:
-      code: "for i in range(10): print(i)"
+      input: "convert 10 kg to lbs"
     assert:
       - type: icontains
-        value: "print"
-      - type: javascript
-        value: "output.length < 300 ? 1 : 0"
+        value: '"value"'
+      - type: icontains
+        value: '"from_unit"'
+      - type: icontains
+        value: '"to_unit"'
+      - type: icontains
+        value: "kg"
+      - type: icontains
+        value: "lbs"
 
   - vars:
-      code: "result = [x**2 for x in range(5)]"
+      input: "How many Fahrenheit is 37 C?"
     assert:
       - type: icontains
-        value: "square"
-      - type: javascript
-        value: 1 / (output.length + 1)
+        value: "37"
+      - type: icontains
+        value: "c"
+      - type: icontains
+        value: "f"
 
   - vars:
-      code: "def greet(name): return f'Hello, {name}!'"
+      input: "please convert 5 miles per hour to km/h"
     assert:
       - type: icontains
-        value: "function"
-      - type: llm-rubric
-        value: ensure the explanation is understandable to a beginner
-        provider: "ollama:chat:phi3:mini"
+        value: "5"
+      - type: icontains
+        value: "mph"
+      - type: icontains
+        value: "km/h"
